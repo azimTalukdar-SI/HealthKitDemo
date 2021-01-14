@@ -9,6 +9,81 @@ import UIKit
 import HealthKit
 import HealthKitUI
 
+public enum HKBloodTypeString : Int {
+
+    
+    case notSet = 0
+
+    case aPositive = 1
+
+    case aNegative = 2
+
+    case bPositive = 3
+
+    case bNegative = 4
+
+    case abPositive = 5
+
+    case abNegative = 6
+
+    case oPositive = 7
+
+    case oNegative = 8
+    
+    var name: String {
+        switch self {
+        case .notSet:
+            return "Not Set"
+        case .aPositive:
+            return "A Positive"
+        case .aNegative:
+            return "A Negative"
+        case .bPositive:
+            return "B Positive"
+        case .bNegative:
+            return "B Negative"
+        case .abPositive:
+            return "AB Positive"
+        case .abNegative:
+            return "AB Negative"
+        case .oPositive:
+            return "O Positive"
+        case .oNegative:
+            return "O Negative"
+        default:
+            return "Not Available"
+        }
+    }
+}
+
+public enum HKBiologicalSexString : Int {
+
+    
+    case notSet = 0
+
+    case female = 1
+
+    case male = 2
+
+    @available(iOS 8.2, *)
+    case other = 3
+    
+    var name: String {
+        switch self {
+        case .notSet:
+            return "Not Set"
+        case .female:
+            return "Female"
+        case .male:
+            return "Male"
+        case .other:
+            return "Other"
+        default:
+            return "Not Available"
+        }
+    }
+}
+
 class ViewController: UIViewController {
     
     var healthKitStore = HKHealthStore()
@@ -68,9 +143,9 @@ class ViewController: UIViewController {
         do {
           let userAgeSexAndBloodType = try getAgeSexAndBloodType()
             lblBloodType.text = String(userAgeSexAndBloodType.age)
-//            lblSex.text = userAgeSexAndBloodType.biologicalSex
-//            lblBloodType.text = userAgeSexAndBloodType.bloodType
-          
+            lblSex.text = HKBiologicalSexString(rawValue: userAgeSexAndBloodType.biologicalSex.rawValue)?.name
+            lblBloodType.text = HKBloodTypeString(rawValue: userAgeSexAndBloodType.bloodType.rawValue)?.name
+            print(userAgeSexAndBloodType.biologicalSex)
         } catch let error {
 //          self.displayAlert(for: error)
         }
