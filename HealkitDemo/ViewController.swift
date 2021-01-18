@@ -35,21 +35,21 @@ public enum HKBloodTypeString : Int {
         case .notSet:
             return "Not Set"
         case .aPositive:
-            return "A Positive"
+            return "A +ve"
         case .aNegative:
-            return "A Negative"
+            return "A -ve"
         case .bPositive:
-            return "B Positive"
+            return "B +ve"
         case .bNegative:
-            return "B Negative"
+            return "B -ve"
         case .abPositive:
-            return "AB Positive"
+            return "AB +ve"
         case .abNegative:
-            return "AB Negative"
+            return "AB -ve"
         case .oPositive:
-            return "O Positive"
+            return "O +ve"
         case .oNegative:
-            return "O Negative"
+            return "O -ve"
         default:
             return "Not Available"
         }
@@ -109,53 +109,75 @@ class ViewController: UIViewController {
         }
         
         //2. Prepare the data types that will interact with HealthKit
-        guard   let dateOfBirth = HKObjectType.characteristicType(forIdentifier: .dateOfBirth),
-                let bloodType = HKObjectType.characteristicType(forIdentifier: .bloodType),
-                let biologicalSex = HKObjectType.characteristicType(forIdentifier: .biologicalSex),
-                let bodyMassIndex = HKObjectType.quantityType(forIdentifier: .bodyMassIndex),
-                let height = HKObjectType.quantityType(forIdentifier: .height),
-                let bodyMass = HKObjectType.quantityType(forIdentifier: .bodyMass),
-                let activeEnergy = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
-            
-            //                completion(false, HealthkitSetupError.dataTypeNotAvailable)
-            return
-        }
+        guard   let dateOfBirth =            HKObjectType.characteristicType(forIdentifier: .dateOfBirth),
+                let bloodType =              HKObjectType.characteristicType(forIdentifier: .bloodType),
+                let biologicalSex =          HKObjectType.characteristicType(forIdentifier: .biologicalSex),
+                //                let _ =                      HKObjectType.categoryType(forIdentifier: .fever),
+                let _ =                      HKObjectType.correlationType(forIdentifier: .food),
+                let _ =                      HKObjectType.documentType(forIdentifier: .CDA),//Clinical Document Architecture
+                let bodyMassIndex =          HKObjectType.quantityType(forIdentifier: .bodyMassIndex),
+                let bodyMass =          HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass),
+                let height =                 HKObjectType.quantityType(forIdentifier: .height),
+                let bloodGlucose =           HKObjectType.quantityType(forIdentifier: .bloodGlucose),
+                let bloodAlchohol =          HKObjectType.quantityType(forIdentifier: .bloodAlcoholContent),
+                let bloodPressureSystolic =  HKObjectType.quantityType(forIdentifier: .bloodPressureSystolic),
+                let bloodPressureDiastolic = HKObjectType.quantityType(forIdentifier: .bloodPressureDiastolic),
+                let activeEnergy =           HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
+                
+                //                completion(false, HealthkitSetupError.dataTypeNotAvailable)
+                return
+            }
         
         //3. Prepare a list of types you want HealthKit to read and write
         let healthKitTypesToWrite: Set<HKSampleType> = [bodyMassIndex,
                                                         activeEnergy,
                                                         HKObjectType.workoutType()]
-            
+        
         let healthKitTypesToRead: Set<HKObjectType> = [dateOfBirth,
                                                        bloodType,
                                                        biologicalSex,
                                                        bodyMassIndex,
                                                        height,
                                                        bodyMass,
-                                                       HKObjectType.workoutType()]
-
+                                                       bloodGlucose,
+                                                       bloodAlchohol,
+                                                       bloodPressureSystolic,
+                                                       bloodPressureDiastolic,
+                                                       bodyMass,
+                                                       HKObjectType.workoutType(),
+                                                       HKObjectType.activitySummaryType()
+                                                       ]
+        
         //4. Request Authorization
-        HKHealthStore().requestAuthorization(toShare: healthKitTypesToWrite, read: healthKitTypesToRead)
+        healthKitStore.requestAuthorization(toShare: healthKitTypesToWrite, read: healthKitTypesToRead)
         { (success, error) in
-//          completion(success, error)
+            //          completion(success, error)
         }
         
         do {
-          let userAgeSexAndBloodType = try getAgeSexAndBloodType()
-            lblBloodType.text = String(userAgeSexAndBloodType.age)
-            lblSex.text = HKBiologicalSexString(rawValue: userAgeSexAndBloodType.biologicalSex.rawValue)?.name
-            lblBloodType.text = HKBloodTypeString(rawValue: userAgeSexAndBloodType.bloodType.rawValue)?.name
-            print(userAgeSexAndBloodType.biologicalSex)
+            let userAgeSexAndBloodType = try getAgeSexAndBloodType()
+            lblAge.text = userAgeSexAndBloodType.age
+            lblSex.text = userAgeSexAndBloodType.sex
+            lblBloodType.text = userAgeSexAndBloodType.bloodType
+            lblDOB.text = userAgeSexAndBloodType.Dob
+            getHeight()
+            getWeight()
+            getHeartRate()
+//            lblHeight.text = userAgeSexAndBloodType.height
+//            lblWeight.text = userAgeSexAndBloodType.weight
         } catch let error {
-//          self.displayAlert(for: error)
+            //          self.displayAlert(for: error)
         }
-
+        
     }
     
     
-    private func getAgeSexAndBloodType() throws -> (age: Int,
-                                                  biologicalSex: HKBiologicalSex,
-                                                  bloodType: HKBloodType) {
+    private func getAgeSexAndBloodType() throws -> (age: String?,
+                                                  sex: String?,
+                                                  bloodType: String?,
+                                                  Dob: String?,
+                                                  height: String?,
+                                                  weight: String?) {
 
         
       do {
@@ -164,6 +186,8 @@ class ViewController: UIViewController {
         let birthdayComponents =  try healthKitStore.dateOfBirthComponents()
         let biologicalSex =       try healthKitStore.biologicalSex()
         let bloodType =           try healthKitStore.bloodType()
+        let height = HKObjectType.quantityType(forIdentifier: .height)
+        let weight = HKObjectType.quantityType(forIdentifier: .bodyMass)
           
         //2. Use Calendar to calculate age.
         let today = Date()
@@ -171,15 +195,84 @@ class ViewController: UIViewController {
         let todayDateComponents = calendar.dateComponents([.year],
                                                             from: today)
         let thisYear = todayDateComponents.year!
-        let age = thisYear - birthdayComponents.year!
+        let ageStr = String(thisYear - birthdayComponents.year!)
          
         //3. Unwrap the wrappers to get the underlying enum values.
-        let unwrappedBiologicalSex = biologicalSex.biologicalSex
-        let unwrappedBloodType = bloodType.bloodType
+        let sexStr = HKBiologicalSexString(rawValue:biologicalSex.biologicalSex.rawValue)?.name
+        let bloodTypeStr = HKBiologicalSexString(rawValue:bloodType.bloodType.rawValue)?.name
+        let DobStr = "\(birthdayComponents.day!)-\(birthdayComponents.month!)-\(birthdayComponents.year!)"
           
-        return (age, unwrappedBiologicalSex, unwrappedBloodType)
+        return (ageStr, sexStr, bloodTypeStr, DobStr, "height", "weight")
       }
     }
 
+    
+    private func getHeartRate() {
+        if HKHealthStore.isHealthDataAvailable() {
+          let healthStore = HKHealthStore()
+          let heartRateQuantityType = HKObjectType.quantityType(forIdentifier: .heartRate)!
+          let allTypes = Set([HKObjectType.workoutType(),
+                              heartRateQuantityType
+            ])
+          healthStore.requestAuthorization(toShare: nil, read: allTypes) { (result, error) in
+            if let error = error {
+              // deal with the error
+              return
+            }
+            guard result else {
+              // deal with the failed request
+              return
+            }
+            // begin any necessary work if needed
+            print("Heart rate is \(result)")
+          }
+        }
+    }
+    
+    private func getHeight() {
+        if HKHealthStore.isHealthDataAvailable() {
+          let healthStore = HKHealthStore()
+          let heartRateQuantityType = HKObjectType.quantityType(forIdentifier: .height)!
+          let allTypes = Set([HKObjectType.workoutType(),
+                              heartRateQuantityType
+            ])
+          healthStore.requestAuthorization(toShare: nil, read: allTypes) { (result, error) in
+            if let error = error {
+              // deal with the error
+              return
+            }
+            guard result else {
+              // deal with the failed request
+              return
+            }
+            // begin any necessary work if needed
+            print("Heigt is \(result)")
+//            lblHeight.text = result
+          }
+        }
+    }
+    
+    private func getWeight() {
+        if HKHealthStore.isHealthDataAvailable() {
+          let healthStore = HKHealthStore()
+          let heartRateQuantityType = HKObjectType.quantityType(forIdentifier: .bodyMass)!
+          let allTypes = Set([HKObjectType.workoutType(),
+                              heartRateQuantityType
+            ])
+          healthStore.requestAuthorization(toShare: nil, read: allTypes) { (result, error) in
+            if let error = error {
+              // deal with the error
+              return
+            }
+            guard result else {
+              // deal with the failed request
+              return
+            }
+            // begin any necessary work if needed
+            print("weight is \(result)")
+//            lblWeight.text = result
+          }
+        }
+    }
 }
 
