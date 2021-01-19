@@ -5,9 +5,35 @@
 //  Created by Azim Talukdar on 13/01/21.
 //
 
+//  Helpful links
+/*
+ https://agostini.tech/2019/01/07/using-healthkit/
+ https://iosdevcenters.blogspot.com/2017/10/how-to-save-and-get-data-from-healthkit.html
+ */
+
 import UIKit
 import HealthKit
 import HealthKitUI
+
+extension Date {
+    static var yesterday: Date { return Date().dayBefore }
+    static var tomorrow:  Date { return Date().dayAfter }
+    var dayBefore: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: noon)!
+    }
+    var dayAfter: Date {
+        return Calendar.current.date(byAdding: .day, value: 1, to: noon)!
+    }
+    var noon: Date {
+        return Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: self)!
+    }
+    var month: Int {
+        return Calendar.current.component(.month,  from: self)
+    }
+    var isLastDayOfMonth: Bool {
+        return dayAfter.month != month
+    }
+}
 
 public enum HKBloodTypeString : Int {
 
@@ -93,6 +119,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var lblBloodType: UILabel!
     @IBOutlet weak var lblHeight: UILabel!
     @IBOutlet weak var lblWeight: UILabel!
+    @IBOutlet weak var lblWaterCount: UILabel!
     
     
     //MARK:- Method Starts -
@@ -124,6 +151,7 @@ class ViewController: UIViewController {
                 let bloodAlchohol =          HKObjectType.quantityType(forIdentifier: .bloodAlcoholContent),
                 let bloodPressureSystolic =  HKObjectType.quantityType(forIdentifier: .bloodPressureSystolic),
                 let bloodPressureDiastolic = HKObjectType.quantityType(forIdentifier: .bloodPressureDiastolic),
+                let water = HKObjectType.quantityType(forIdentifier: .dietaryWater),
                 let activeEnergy =           HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else {
             
             //                completion(false, HealthkitSetupError.dataTypeNotAvailable)
@@ -133,6 +161,9 @@ class ViewController: UIViewController {
         //3. Prepare a list of types you want HealthKit to read and write
         let healthKitTypesToWrite: Set<HKSampleType> = [bodyMassIndex,
                                                         activeEnergy,
+                                                        height,
+                                                        bodyMass,
+                                                        water,
                                                         HKObjectType.workoutType()]
         
         let healthKitTypesToRead: Set<HKObjectType> = [dateOfBirth,
@@ -146,6 +177,7 @@ class ViewController: UIViewController {
                                                        bloodPressureSystolic,
                                                        bloodPressureDiastolic,
                                                        bodyMass,
+                                                       water,
                                                        HKObjectType.workoutType(),
                                                        HKObjectType.activitySummaryType()
         ]
@@ -159,13 +191,14 @@ class ViewController: UIViewController {
         self.readAllData()
     }
     
-    //MARK: Reading datas
+    //MARK: Reading data
     func readAllData() {
         readAgeAndDOB()
         readSex()
         readBloodtype()
         readHeight()
         readWeight()
+        readWater()
     }
     
     
@@ -258,6 +291,89 @@ class ViewController: UIViewController {
             }
         }
         healthKitStore.execute(query)
+    }
+    
+    private func readWater() {
+        guard let waterType = HKSampleType.quantityType(forIdentifier: .dietaryWater) else {
+            print("Sample type not available")
+            return
+        }
+        
+        let last24hPredicate = HKQuery.predicateForSamples(withStart: Date().dayBefore, end: Date(), options: .strictEndDate)
+        
+        let waterQuery = HKSampleQuery(sampleType: waterType,
+                                       predicate: last24hPredicate,
+                                       limit: HKObjectQueryNoLimit,
+                                       sortDescriptors: nil) {
+            (query, samples, error) in
+            
+            guard
+                error == nil,
+                let quantitySamples = samples as? [HKQuantitySample] else {
+                print("Something went wrong: \(error)")
+                return
+            }
+            
+            let total = quantitySamples.reduce(0.0) { $0 + $1.quantity.doubleValue(for: HKUnit.literUnit(with: .milli)) }
+            print("total water: \(total)")
+            DispatchQueue.main.async {
+                self.lblWaterCount.text = String(format: "Water: %.2f", total)
+            }
+        }
+        HKHealthStore().execute(waterQuery)
+    }
+    
+    //MARK: Write Data
+    func writeHeight() {
+        if let type = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.height) {
+            let date = Date()
+            let quantity = HKQuantity(unit: HKUnit.inch(), doubleValue: 200.0)
+            let sample = HKQuantitySample(type: type, quantity: quantity, start: date, end: date)
+            self.healthKitStore.save(sample, withCompletion: { (success, error) in
+                print("Saved \(success), error \(error)")
+                self.readHeight()
+            })
+        }
+    }
+    
+    func writeWeight() {
+        if let type = HKSampleType.quantityType(forIdentifier: HKQuantityTypeIdentifier.bodyMass) {
+            let date = Date()
+            let quantity = HKQuantity(unit: HKUnit.gramUnit(with: .kilo), doubleValue: 60)
+            let sample = HKQuantitySample(type: type, quantity: quantity, start: date, end: date)
+            self.healthKitStore.save(sample, withCompletion: { (success, error) in
+                print("Saved \(success), error \(error)")
+                self.readWeight()
+            })
+        }
+    }
+    
+    func writeWater() {
+        guard let waterType = HKSampleType.quantityType(forIdentifier: .dietaryWater) else {
+            print("Sample type not available")
+            return
+        }
+        
+        let waterQuantity = HKQuantity(unit: HKUnit.literUnit(with: .milli), doubleValue: 200.0)
+        let today = Date()
+        let waterQuantitySample = HKQuantitySample(type: waterType, quantity: waterQuantity, start: today, end: today)
+        
+        HKHealthStore().save(waterQuantitySample) { (success, error) in
+            print("HK write finished - success: \(success); error: \(error)")
+            self.readWater()
+        }
+    }
+    
+    @IBAction func saveHeightPressed(_ sender: Any) {
+        writeHeight()
+    }
+    
+    @IBAction func saveWaterPressed(_ sender: Any) {
+        writeWater()
+    }
+    
+    @IBAction func saveWeightPressed(_ sender: Any) {
+        writeWeight()
     }
 }
 

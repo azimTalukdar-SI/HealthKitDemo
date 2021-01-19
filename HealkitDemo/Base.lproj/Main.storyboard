@@ -18,7 +18,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="XT3-ha-6aU">
-                                <rect key="frame" x="16" y="164" width="382" height="163"/>
+                                <rect key="frame" x="16" y="60" width="382" height="191.5"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="X8b-W5-jre">
                                         <rect key="frame" x="0.0" y="0.0" width="382" height="20.5"/>
@@ -122,6 +122,49 @@
                                             </label>
                                         </subviews>
                                     </stackView>
+                                    <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="NaN-dB-ffJ">
+                                        <rect key="frame" x="0.0" y="171" width="382" height="20.5"/>
+                                        <subviews>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Water count :" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kMW-dn-Dt8">
+                                                <rect key="frame" x="0.0" y="0.0" width="187" height="20.5"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VBc-9o-Pmw">
+                                                <rect key="frame" x="195" y="0.0" width="187" height="20.5"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                        </subviews>
+                                    </stackView>
+                                </subviews>
+                            </stackView>
+                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" spacing="4" translatesAutoresizingMaskIntoConstraints="NO" id="JL7-YK-S5D">
+                                <rect key="frame" x="16" y="259.5" width="382" height="30"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sEo-TL-Awj">
+                                        <rect key="frame" x="0.0" y="0.0" width="124.5" height="30"/>
+                                        <state key="normal" title="Save Height"/>
+                                        <connections>
+                                            <action selector="saveHeightPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="h4E-qF-9Fz"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ohk-me-lOx">
+                                        <rect key="frame" x="128.5" y="0.0" width="125" height="30"/>
+                                        <state key="normal" title="Water"/>
+                                        <connections>
+                                            <action selector="saveWaterPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="KzC-3h-ft2"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aQA-zV-L8C">
+                                        <rect key="frame" x="257.5" y="0.0" width="124.5" height="30"/>
+                                        <state key="normal" title="Save Weight"/>
+                                        <connections>
+                                            <action selector="saveWeightPressed:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Rjd-69-Pd6"/>
+                                        </connections>
+                                    </button>
                                 </subviews>
                             </stackView>
                         </subviews>
@@ -129,8 +172,11 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="XT3-ha-6aU" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="3ro-4L-awO"/>
-                            <constraint firstItem="XT3-ha-6aU" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="120" id="XhB-Iz-g4f"/>
+                            <constraint firstItem="XT3-ha-6aU" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="16" id="XhB-Iz-g4f"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="JL7-YK-S5D" secondAttribute="trailing" constant="16" id="bUZ-H5-37Z"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="XT3-ha-6aU" secondAttribute="trailing" constant="16" id="bZB-I9-XZC"/>
+                            <constraint firstItem="JL7-YK-S5D" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="lHX-u9-dpa"/>
+                            <constraint firstItem="JL7-YK-S5D" firstAttribute="top" secondItem="XT3-ha-6aU" secondAttribute="bottom" constant="8" id="sxc-WV-vS5"/>
                         </constraints>
                     </view>
                     <connections>
@@ -139,6 +185,7 @@
                         <outlet property="lblDOB" destination="31W-hU-1em" id="zVR-rZ-pyS"/>
                         <outlet property="lblHeight" destination="IYr-XN-8q7" id="SEv-e4-PtW"/>
                         <outlet property="lblSex" destination="liq-g2-Lmv" id="Paa-7Q-bxY"/>
+                        <outlet property="lblWaterCount" destination="VBc-9o-Pmw" id="CHD-mV-ZNS"/>
                         <outlet property="lblWeight" destination="tpA-pi-v9J" id="FJB-6M-Y7s"/>
                     </connections>
                 </viewController>
